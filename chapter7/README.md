@@ -6,7 +6,11 @@
 - Collapsing Functor
   - Maps every object in the source category to one selected object in the target category.
   - Maps every morphism to identity morphism.
-  
+
+### Utitlities
+```ocaml
+let compose f g x = f (g x)
+```
 ### Maybe Functor
 - Maybe functor
 ```ocaml
@@ -42,29 +46,30 @@ module type Maybe_Functor = sig
 end
 ```
 - Maybe Functor Example implementation.
-```
-# let fmap f = function | None -> None | Some x -> Some (f x)
+```ocaml
+# let fmap f = function
+    | None -> None
+    | Some x -> Some (f x)
+val fmap : ('a -> 'b) -> 'a option -> 'b option = <fun>
 ```
 - Id example
 ```ocaml
 # let id x = x
 val id : 'a -> 'a = <fun>
 ```
-- Functor Representation in OCaml
+### Utilities needed to compile the code(Can skip this section)
 ```ocaml
 module type Functor = sig 
   type 'a t 
   val fmap : ('a -> 'b) -> 'a t -> 'b t 
 end
-```
-- Functor for Option type 
-```ocaml
+(* Functor for Option type *)
 module OptionF : (Functor with type 'a t = 'a option) = struct 
   type 'a t = 'a option
   let fmap f = function | None -> None | Some x -> Some (f x) 
 end 
 ```
-- Test Functor laws. 
+### Test functor laws
 - Test Id law (Syntactically correct OCaml but will not be compiled by mdx)
 ```OCaml
 module Test_Functor_Id(F: Functor) = struct 
@@ -98,10 +103,10 @@ type point = Pt of float * float
 ```
 - Eq instance for Point 
 ```ocaml
-module Float_Eq = struct 
-  type float 
-  let (==) x y = x = y 
-end 
+module Point_Eq(E:Eq with type a = float) = struct
+  type a = point
+  let (==) (Pt (p1x, p1y)) (Pt (p2x, p2y)) = E.(p1x == p2x) && E.(p2x == p2y)
+end
 ```
 - Functor for OCaml 
 ```ocaml
@@ -114,7 +119,9 @@ end
 ```ocaml
 module Option_Functor:(Functor with type 'a t = 'a option) = struct 
   type 'a t = 'a option 
-  let fmap f = function | None -> None | Some x -> Some (f x) 
+  let fmap f = function
+    | None -> None
+    | Some x -> Some (f x)
 end 
 ```
 - List Functor 
@@ -125,19 +132,23 @@ type 'a list = Nil | Cons of 'a * 'a list
 ```ocaml
 module type List_Functor_Type = sig
   type 'a t = 'a list
-  val fmap : ('a -> 'b) -> 'a list -> 'a list 
+  val fmap : ('a -> 'b) -> 'a list -> 'b list 
 end 
 ```
 - Fmap impl for list 
 ```ocaml
-# let rec fmap f = function | Nil -> Nil | Cons (x, xs) -> Cons (f x, fmap f xs) 
+# let rec fmap f = function
+    | Nil -> Nil
+    | Cons (x, xs) -> Cons (f x, fmap f xs)
 val fmap : ('a -> 'b) -> 'a list -> 'b list = <fun>
 ```
 - Functor instance for List 
 ```ocaml
 module List_Functor : (Functor with type 'a t = 'a list) = struct 
   type 'a t = 'a list 
-  let rec fmap f = function | Nil -> Nil | Cons (x, xs) -> Cons (f x, fmap f xs) 
+  let rec fmap f = function
+    | Nil -> Nil
+    | Cons (x, xs) -> Cons (f x, fmap f xs)
 end 
 ```
 ### Reader Functor
@@ -150,12 +161,11 @@ type ('a, 'b) t = 'a -> 'b
 module type T = sig
   type t
 end
-
 module Partially_Applied_FunctionType(T : T) = struct
   type 'b t = T.t -> 'b
 end
 ```
-- fmap for Reader(Syntactically correct OCaml but mdx 
+- fmap for Reader
 ```ocaml
 module type Reader_Fmap_Example = sig
   val fmap : ('a -> 'b) -> ('r -> 'a) -> 'r -> 'b
@@ -168,18 +178,9 @@ module Reader_Functor(T: T):Functor = struct
   let fmap f ra = fun r -> f (ra r)
 end
 ```
-- Reader Functor Implementation using compose
-```ocaml
-
-# let (<.>) f g x = f (g x)
-val ( <.> ) : ('a -> 'b) -> ('c -> 'a) -> 'c -> 'b = <fun>
-
-# let fmap (f: 'a -> 'b) (g: 'r -> 'a) = f <.> g
-val fmap : ('a -> 'b) -> ('r -> 'a) -> 'r -> 'b = <fun>
-```
 - Reader Functor implementation - Even simpler
 ```ocaml
-# let fmap: ('a -> 'b) -> ('r -> 'a) -> ('r -> 'b) = (<.>)
+# let fmap: ('a -> 'b) -> ('r -> 'a) -> ('r -> 'b) = compose
 val fmap : ('a -> 'b) -> ('r -> 'a) -> 'r -> 'b = <fun>
 ```
 
@@ -205,36 +206,30 @@ end
 ```ocaml
 module Const_Functor(T : T) : Functor = struct
   type 'a t = (T.t, 'a) const
-  let fmap f = function | Const c -> Const c
+  let fmap f (Const c) = Const c (* or even let fmap _ c = c *)
 end
 ```
 ### Functor Composition
 - A composition of two functors when acting on objects is just the composition of their respective object mappings.
 - Same for morphisms.
 ```ocaml
-# let maybe_tail = function | [] -> None | _ :: xs -> Some xs
+# let maybe_tail = function 
+    | [] -> None 
+    | _ :: xs -> Some xs
 val maybe_tail : 'a list -> 'a list option = <fun>
 ```
 - Using fmap of respective functors
 ```ocaml
-# let square x = x * x
-val square : int -> int = <fun>
-# let mis = Some (Cons (1, Cons (2, Cons (3, Nil))))
-val mis : int list option = Some (Cons (1, Cons (2, Cons (3, Nil))))
-# Option_Functor.fmap (List_Functor.fmap square) mis
-- : int list option = Some (Cons (1, Cons (4, Cons (9, Nil))))
+let square x = x * x
+let mis = Some (Cons (1, Cons (2, Cons (3, Nil))))
+let mis2 = Option_Functor.fmap (List_Functor.fmap square) mis
 ```
 - Composing fmap of list and option functors
 ```ocaml
-# Option_Functor.fmap
-- : ('a -> 'b) -> 'a option -> 'b option = <fun>
-# List_Functor.fmap
-- : ('a -> 'b) -> 'a list -> 'b list = <fun>
-# let fmapC = Option_Functor.fmap <.> List_Functor.fmap
-val fmapC :
-  ('_weak1 -> '_weak2) -> '_weak1 list option -> '_weak2 list option = <fun>
-# fmapC (square) mis
-- : int list option = Some (Cons (1, Cons (4, Cons (9, Nil))))
+let fmapO = Option_Functor.fmap
+let fmapL = List_Functor.fmap
+let fmapC f l = (compose fmapO fmapL) f l
+let mis2 = fmapC (square) mis
 ```
 - Viewing fmap as a function of one argument
 ```ocaml

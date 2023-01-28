@@ -1,6 +1,6 @@
-#require "core,core.top,ppx_jane";;
+#require "core,core.top";;
+#require "str";;
 
 open Base
-open Core
 
 let () = Printexc.record_backtrace false

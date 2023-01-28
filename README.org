@@ -1,9 +1,26 @@
 * OCaml version of Category Theory For Programmers
 
-Resources I found useful as I started translating the book in OCaml:
-1. https://github.com/freebroccolo/ocaml-cats
-2. https://github.com/ocamllabs/higher
+** How do I get the book?
+   - Currently, the book can be download by cloning this fork -
+     https://github.com/ArulselvanMadhavan/milewski-ctfp-pdf and
+     running
+     #+BEGIN_SRC bash
+     cd milewski-ctfp-pdf
+     git checkout ocaml
+     cd src
+     make ocaml
+     #+END_SRC
 
-Thanks to @mseri for offering to do code review.
+** Acknowledgements
+   - Thanks to Marcello Seri @mseri for doing the code review. If @mseri
+     hadn't offered to do the code review, this project would not have started
+   - Thanks to @XVilka for promoting this effort in reddit, ocaml
+     forums and offering helpful links
+   - All the kind people in OCaml discord who hang out in the
+     #beginners channel answering questions
 
-If you find any mistakes or want to improve code snippets, please submit a PR.
+** Helpful Resources
+   - Resources I found useful as I started translating the book in OCaml:
+     1) https://github.com/freebroccolo/ocaml-cats
+     2) https://github.com/ocamllabs/higher
+
